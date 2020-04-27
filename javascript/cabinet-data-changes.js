@@ -8,7 +8,7 @@ const plot_title = (elem, title) => {
 		.attr('dominant-baseline', 'hanging')
 		.attr('text-anchor', 'middle')
 		.attr('x', PLOT_WIDTH/2)
-		.attr('y', 3)
+		.attr('y', 25)
 		.text(title);
 };
 
@@ -38,6 +38,18 @@ const plot_data = (group, x_data, y_data) => {
 		.datum(dataset)
 		.attr('class', 'line')
 		.attr('d', line);
+
+	group.append("g")
+		.attr("class", "x_axis")
+		.attr("transform", `translate(0,${PLOT_HEIGHT})`)
+		.call(d3.axisBottom(x_scale)
+			.tickFormat(d => d)); // Create an axis component with d3.axisBottom
+
+	group.append("g")
+		.attr("class", "y_axis")
+		.attr("transform", `translate(50,0)`)
+		.call(d3.axisLeft(y_scale)
+			.tickFormat(d => Formatter.humanReadable(d, 0, '', true))); // Create an axis component with d3.axisLeft
 };
 
 const plot_position = (svg, y_offset, position_data) => {
