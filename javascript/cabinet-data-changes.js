@@ -34,7 +34,6 @@ const plot_data = (group, x_data, y_data, position_confirmations) => {
 	x_data = x_data.slice(11);
 	y_data = y_data.slice(11);
 
-	console.log(x_data[0]);
 	const x_scale = d3.scaleLinear()
 		.domain([x_data[0], x_data[x_data.length - 1]])
 		.range([50, PLOT_WIDTH - 20]);
@@ -95,8 +94,7 @@ const plot_position = (svg, y_offset, position_data, position_confirmations) => 
 
 const convert_to_relative_year = (date_str) => {
 	const date = new Date(date_str);
-	console.log(date.getFullYear() + date.getDate() / (date.isLeapYear() ? 366 : 365));
-	return date.getFullYear() + date.getDate() / (date.isLeapYear() ? 366 : 365);
+	return date.getFullYear() + date.getDOY() / (date.isLeapYear() ? 366.0 : 365.0);
 }
 
 
