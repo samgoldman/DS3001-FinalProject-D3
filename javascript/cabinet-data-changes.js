@@ -50,6 +50,8 @@ const plot_data = (group, x_data, y_data, position_confirmations) => {
 	// Zip x and y
 	const dataset = x_data.map((e, i) => [e, y_data[i]]);
 
+	position_confirmations = position_confirmations.filter(d => convert_to_relative_year(d['Confirmed']) >= x_data[0])
+
 	group.selectAll('.conf_line')
 		.data(position_confirmations)
 		.enter()
@@ -76,7 +78,7 @@ const plot_data = (group, x_data, y_data, position_confirmations) => {
 		.attr("class", "y_axis")
 		.attr("transform", `translate(50,0)`)
 		.call(d3.axisLeft(y_scale)
-			.tickFormat(d => Formatter.humanReadable(d, 0, '', true))); // Create an axis component with d3.axisLeft
+			.tickFormat(d => Formatter.humanReadable(d, 1, '', true))); // Create an axis component with d3.axisLeft
 
 
 };
