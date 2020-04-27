@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>DS3001 - Analysis of Federal Foreign Spending</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js"></script>
+	<script src="javascript/cabinet-data-changes.js"></script>
+	<style type="text/css">
+		/* 13. Basic Styling with CSS */
+
+		/* Style the lines by removing the fill and applying a stroke */
+		.line {
+			fill: none;
+			stroke: #ffab00;
+			stroke-width: 3;
+		}
+
+		.overlay {
+			fill: none;
+			pointer-events: all;
+		}
+
+		/* Style the dots by assigning a fill and stroke */
+		.dot {
+			fill: #ffab00;
+			stroke: #fff;
+		}
+
+		.focus circle {
+			fill: none;
+			stroke: steelblue;
+		}
+
+	</style>
+</head>
+<body>
+<svg id="main_svg"></svg>
+</body>
+</html>
