@@ -36,7 +36,7 @@ const plot_data = (group, x_data, y_data, position_confirmations) => {
 
 	const x_scale = d3.scaleLinear()
 		.domain([x_data[0], x_data[x_data.length - 1]])
-		.range([50, PLOT_WIDTH - 20]);
+		.range([50, PLOT_WIDTH - 50]);
 
 	const y_scale = d3.scaleLinear()
 		.domain([Math.min(...y_data), Math.max(...y_data)])
@@ -83,6 +83,41 @@ const plot_data = (group, x_data, y_data, position_confirmations) => {
 
 };
 
+const plot_percent_data = (group, x_data, y_data) => {
+	// Remove NaNs from rolling average
+	x_data = x_data.slice(11);
+	y_data = y_data.slice(11);
+
+	const x_scale = d3.scaleLinear()
+		.domain([x_data[0], x_data[x_data.length - 1]])
+		.range([50, PLOT_WIDTH - 50]);
+
+	const y_scale = d3.scaleLinear()
+		.domain([Math.min(...y_data), Math.max(...y_data)])
+		.range([PLOT_HEIGHT - 20, 50]);
+
+	const line = d3.line()
+		.x(d => x_scale(d[0]))
+		.y(d => y_scale(d[1]))
+		.curve(d3.curveMonotoneX)
+
+	// Zip x and y
+	const dataset = x_data.map((e, i) => [e, y_data[i]]);
+
+	group.append('path')
+		.datum(dataset)
+		.attr('class', 'line line_percent')
+		.attr('d', line);
+
+	group.append("g")
+		.attr("class", "y_axis")
+		.attr("transform", `translate(${PLOT_WIDTH - 50},0)`)
+		.call(d3.axisRight(y_scale)
+			.tickFormat(d => (d*100.0).toFixed(2) + '%')); // Create an axis component with d3.axisLeft
+
+
+};
+
 const plot_position = (svg, y_offset, position_data, position_confirmations) => {
 	const domestic_group = svg.append('g').attr('transform', `translate(0, ${y_offset})`);
 	const foreign_group = svg.append('g').attr('transform', `translate(${PLOT_WIDTH}, ${y_offset})`);
@@ -90,8 +125,18 @@ const plot_position = (svg, y_offset, position_data, position_confirmations) => 
 	plot_title(domestic_group, `${position_data['position']} - Domestic Spending`);
 	plot_title(foreign_group, `${position_data['position']} - Foreign Spending`);
 
-	plot_data(domestic_group, position_data['domestic_dates'], position_data['domestic_spending'], position_confirmations);
-	plot_data(foreign_group, position_data['foreign_dates'], position_data['foreign_spending'], position_confirmations);
+	const domestic_data = position_data['domestic_spending'].map(d => isNaN(d) ? 0 : d);
+	const foreign_data = position_data['foreign_spending'].map(d => isNaN(d) ? 0 : d);
+
+	const domestic_percent = domestic_data.map((d, i) => i >= foreign_data.length ? 1 : (d) / (d + foreign_data[i]));
+	const foreign_percent = foreign_data.map((d, i) => i >= domestic_data.length ? 1 : (d) / (d + domestic_data[i]));
+
+	plot_percent_data(domestic_group, position_data['domestic_dates'], domestic_percent);
+	plot_percent_data(foreign_group, position_data['foreign_dates'], foreign_percent)
+
+	plot_data(domestic_group, position_data['domestic_dates'], domestic_data, position_confirmations);
+	plot_data(foreign_group, position_data['foreign_dates'], foreign_data, position_confirmations);
+
 };
 
 const convert_to_relative_year = (date_str) => {
@@ -109,7 +154,7 @@ const init = async () => {
 
 			data[0].forEach((position_data, index) => {
 				const position_confirmations = data[1].filter(d => d["Position"] === position_data['position']);
-
+				console.log(position_data['position'])
 				plot_position(svg, PLOT_HEIGHT*index, position_data, position_confirmations);
 			});
 	});
