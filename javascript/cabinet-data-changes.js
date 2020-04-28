@@ -1,5 +1,9 @@
-const PLOT_WIDTH = 600;
+const PLOT_WIDTH = window.innerWidth / 2 - 20;
 const PLOT_HEIGHT = 400;
+const MARGIN_LEFT = 75;
+const MARGIN_RIGHT = 75;
+const MARGIN_BOTTOM = 40;
+const MARGIN_TOP = 50;
 
 Date.prototype.isLeapYear = function() {
 	const year = this.getFullYear();
@@ -36,11 +40,11 @@ const plot_data = (group, x_data, y_data, position_confirmations) => {
 
 	const x_scale = d3.scaleLinear()
 		.domain([x_data[0], x_data[x_data.length - 1]])
-		.range([50, PLOT_WIDTH - 50]);
+		.range([MARGIN_LEFT, PLOT_WIDTH - MARGIN_RIGHT]);
 
 	const y_scale = d3.scaleLinear()
 		.domain([Math.min(...y_data), Math.max(...y_data)])
-		.range([PLOT_HEIGHT - 20, 50]);
+		.range([PLOT_HEIGHT - MARGIN_BOTTOM, MARGIN_TOP]);
 
 	const line = d3.line()
 		.x(d => x_scale(d[0]))
@@ -57,8 +61,8 @@ const plot_data = (group, x_data, y_data, position_confirmations) => {
 		.enter()
 		.append('line')
 		.attr('class', d => `conf_line ${d['Party'].toLowerCase()}`)
-		.attr('y1', 50)
-		.attr('y2', PLOT_HEIGHT - 20)
+		.attr('y1', MARGIN_TOP)
+		.attr('y2', PLOT_HEIGHT - MARGIN_BOTTOM)
 		.attr('x1', d => x_scale(convert_to_relative_year(d['Confirmed'])))
 		.attr('x2', d => x_scale(convert_to_relative_year(d['Confirmed'])))
 		.style('stroke-width', '2px');
@@ -70,17 +74,38 @@ const plot_data = (group, x_data, y_data, position_confirmations) => {
 
 	group.append("g")
 		.attr("class", "x_axis")
-		.attr("transform", `translate(0,${PLOT_HEIGHT-20})`)
+		.attr("transform", `translate(0,${PLOT_HEIGHT-MARGIN_BOTTOM})`)
 		.call(d3.axisBottom(x_scale)
 			.tickFormat(d => d)); // Create an axis component with d3.axisBottom
 
 	group.append("g")
 		.attr("class", "y_axis")
-		.attr("transform", `translate(50,0)`)
+		.attr("transform", `translate(${MARGIN_LEFT},0)`)
 		.call(d3.axisLeft(y_scale)
 			.tickFormat(d => Formatter.humanReadable(d, 1, '', true))); // Create an axis component with d3.axisLeft
 
+	group.append('text')
+		.attr('x', PLOT_WIDTH / 2)
+		.attr('y', PLOT_HEIGHT)
+		.attr('font-family', 'sans-serif')
+		.attr('text-anchor', 'middle')
+		.text('Year');
 
+	group.append('text')
+		.attr('dy', 20)
+		.attr('dx', (PLOT_HEIGHT - MARGIN_TOP - MARGIN_BOTTOM) / 2 + MARGIN_TOP)
+		.attr('font-family', 'sans-serif')
+		.attr('text-anchor', 'middle')
+		.attr("transform", "rotate(-90)")
+		.text('Total Spending ($)');
+
+	group.append('text')
+		.attr('dy', -1* (PLOT_WIDTH - 20))
+		.attr('dx', (PLOT_HEIGHT - MARGIN_TOP - MARGIN_BOTTOM) / 2 + MARGIN_TOP)
+		.attr('font-family', 'sans-serif')
+		.attr('text-anchor', 'middle')
+		.attr("transform", "rotate(90)")
+		.text('Percent of Total Spending');
 };
 
 const plot_percent_data = (group, x_data, y_data) => {
@@ -90,11 +115,11 @@ const plot_percent_data = (group, x_data, y_data) => {
 
 	const x_scale = d3.scaleLinear()
 		.domain([x_data[0], x_data[x_data.length - 1]])
-		.range([50, PLOT_WIDTH - 50]);
+		.range([MARGIN_LEFT, PLOT_WIDTH - MARGIN_RIGHT]);
 
 	const y_scale = d3.scaleLinear()
 		.domain([Math.min(...y_data), Math.max(...y_data)])
-		.range([PLOT_HEIGHT - 20, 50]);
+		.range([PLOT_HEIGHT - MARGIN_BOTTOM, MARGIN_TOP]);
 
 	const line = d3.line()
 		.x(d => x_scale(d[0]))
@@ -111,7 +136,7 @@ const plot_percent_data = (group, x_data, y_data) => {
 
 	group.append("g")
 		.attr("class", "y_axis")
-		.attr("transform", `translate(${PLOT_WIDTH - 50},0)`)
+		.attr("transform", `translate(${PLOT_WIDTH - MARGIN_RIGHT},0)`)
 		.call(d3.axisRight(y_scale)
 			.tickFormat(d => (d*100.0).toFixed(2) + '%')); // Create an axis component with d3.axisLeft
 
