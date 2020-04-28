@@ -22,7 +22,7 @@ Date.prototype.getDOY = function() {
 };
 
 const plot_title = (elem, title) => {
-	elem.append('text')
+	const title_element =  elem.append('text')
 		.attr('font-size', '16px')
 		.attr('font-family', 'sans-serif')
 		.attr('dominant-baseline', 'hanging')
@@ -30,10 +30,12 @@ const plot_title = (elem, title) => {
 		.attr('x', PLOT_WIDTH/2)
 		.attr('y', 25)
 		.text(title);
+
+	return title_element;
 };
 
 // Source: https://bl.ocks.org/gordlea/27370d1eea8464b04538e6d8ced39e89
-const plot_data = (group, x_data, y_data, position_confirmations) => {
+const plot_data = (group, x_data, y_data, position_confirmations, title) => {
 	// Remove NaNs from rolling average
 	x_data = x_data.slice(11);
 	y_data = y_data.slice(11);
@@ -54,7 +56,13 @@ const plot_data = (group, x_data, y_data, position_confirmations) => {
 	// Zip x and y
 	const dataset = x_data.map((e, i) => [e, y_data[i]]);
 
-	position_confirmations = position_confirmations.filter(d => convert_to_relative_year(d['Confirmed']) >= x_data[0])
+	group.append('path')
+		.datum(dataset)
+		.attr('class', 'line')
+		.attr('d', line);
+
+
+	position_confirmations = position_confirmations.filter(d => convert_to_relative_year(d['Confirmed']) >= x_data[0] && convert_to_relative_year(d['Confirmed']) <= x_data[x_data.length - 1]);
 
 	group.selectAll('.conf_line')
 		.data(position_confirmations)
@@ -65,12 +73,18 @@ const plot_data = (group, x_data, y_data, position_confirmations) => {
 		.attr('y2', PLOT_HEIGHT - MARGIN_BOTTOM)
 		.attr('x1', d => x_scale(convert_to_relative_year(d['Confirmed'])))
 		.attr('x2', d => x_scale(convert_to_relative_year(d['Confirmed'])))
-		.style('stroke-width', '2px');
+		.on('mouseover', d => {
+			let text_parts = title.text().split(' - ');
+			if (2 === text_parts.length) text_parts.splice(1, 0, d['Nominee']);
+			title.text(text_parts.join(' - '));
+		})
+		.on('mouseout', d => {
+			let text_parts = title.text().split(' - ');
+			if (3 === text_parts.length) text_parts.splice(1, 1);
+			title.text(text_parts.join(' - '));
+		})
+		.style('stroke-width', '6px');
 
-	group.append('path')
-		.datum(dataset)
-		.attr('class', 'line')
-		.attr('d', line);
 
 	group.append("g")
 		.attr("class", "x_axis")
@@ -147,8 +161,8 @@ const plot_position = (svg, y_offset, position_data, position_confirmations) => 
 	const domestic_group = svg.append('g').attr('transform', `translate(0, ${y_offset})`);
 	const foreign_group = svg.append('g').attr('transform', `translate(${PLOT_WIDTH}, ${y_offset})`);
 
-	plot_title(domestic_group, `${position_data['position']} - Domestic Spending`);
-	plot_title(foreign_group, `${position_data['position']} - Foreign Spending`);
+	const domestic_title = plot_title(domestic_group, `${position_data['position']} - Domestic Spending`);
+	const foreign_title = plot_title(foreign_group, `${position_data['position']} - Foreign Spending`);
 
 	const domestic_data = position_data['domestic_spending'].map(d => isNaN(d) ? 0 : d);
 	const foreign_data = position_data['foreign_spending'].map(d => isNaN(d) ? 0 : d);
@@ -159,8 +173,8 @@ const plot_position = (svg, y_offset, position_data, position_confirmations) => 
 	plot_percent_data(domestic_group, position_data['domestic_dates'], domestic_percent);
 	plot_percent_data(foreign_group, position_data['foreign_dates'], foreign_percent)
 
-	plot_data(domestic_group, position_data['domestic_dates'], domestic_data, position_confirmations);
-	plot_data(foreign_group, position_data['foreign_dates'], foreign_data, position_confirmations);
+	plot_data(domestic_group, position_data['domestic_dates'], domestic_data, position_confirmations, domestic_title);
+	plot_data(foreign_group, position_data['foreign_dates'], foreign_data, position_confirmations, foreign_title);
 
 };
 
@@ -179,7 +193,6 @@ const init = async () => {
 
 			data[0].forEach((position_data, index) => {
 				const position_confirmations = data[1].filter(d => d["Position"] === position_data['position']);
-				console.log(position_data['position'])
 				plot_position(svg, PLOT_HEIGHT*index, position_data, position_confirmations);
 			});
 	});
